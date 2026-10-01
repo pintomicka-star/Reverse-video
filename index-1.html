@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reverse Video</title>
+<style>body{font-family:Arial,sans-serif;background:#111;color:#eee;margin:0;padding:20px}main{max-width:700px;margin:auto;background:#1e1e21;border-radius:20px;padding:22px}button,label{display:block;width:100%;box-sizing:border-box;padding:15px;border-radius:12px;border:0;font-size:18px;margin:10px 0}label,button{background:#fff;color:#111;text-align:center}input{display:none}video{width:100%;margin-top:12px;border-radius:12px;background:#000}#info,#status{padding:12px;margin-top:10px;border-radius:10px;background:#29292d}#status.ok{background:#19351f}#status.err{background:#4a2020}progress{width:100%;height:20px}</style></head>
+<body><main><h1>🎬 Reverse Video</h1><p>Inverse une vidéo directement sur le téléphone.</p>
+<label for="pick">📁 Charger une vidéo</label><input id="pick" type="file" accept="video/*">
+<div id="info"></div><video id="preview" controls playsinline hidden></video>
+<button id="go" hidden>↩️ Inverser la vidéo</button><progress id="prog" max="100" value="0" hidden></progress><div id="status">En attente d'une vidéo.</div>
+<a id="save" hidden download="video_inversee.mp4"><button>⬇️ Enregistrer la vidéo inversée</button></a>
+<p>Maximum : 10 secondes. Le traitement vidéo est effectué localement.</p></main>
+<script type="module">
+import { FFmpeg } from './node_modules/@ffmpeg/ffmpeg/dist/esm/index.js';
+import { fetchFile, toBlobURL } from './node_modules/@ffmpeg/util/dist/esm/index.js';
+const $=id=>document.getElementById(id); let file=null,url=null,ff=null,loaded=false;
+function status(t,c=''){ $('status').textContent=t;$('status').className=c}
+function duration(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f),v=document.createElement('video');v.preload='metadata';v.onloadedmetadata=()=>{URL.revokeObjectURL(u);Number.isFinite(v.duration)?res(v.duration):rej(Error('Durée inconnue'))};v.onerror=()=>{URL.revokeObjectURL(u);rej(Error('Format vidéo non lisible'))};v.src=u})}
+$('pick').onchange=async()=>{file=$('pick').files[0];if(!file)return; $('go').hidden=true;$('save').hidden=true;$('preview').hidden=true;status('Lecture de la vidéo...');try{let d=await duration(file);$('info').textContent=`${file.name} — ${d.toFixed(2)} s — ${(file.size/1048576).toFixed(1)} Mo`;if(d>10.05){status('Vidéo trop longue : maximum 10 secondes.','err');return}url=URL.createObjectURL(file);$('preview').src=url;$('preview').hidden=false;$('go').hidden=false;status('Vidéo chargée.','ok')}catch(e){status('Impossible de lire cette vidéo : '+e.message,'err')}};
+async function load(){if(loaded)return;ff=new FFmpeg();ff.on('progress',({progress})=>{$('prog').value=Math.round(progress*100);status(`Inversion en cours… ${Math.round(progress*100)}%`)});const b='./node_modules/@ffmpeg/core/dist/esm';await ff.load({coreURL:await toBlobURL(b+'/ffmpeg-core.js','text/javascript'),wasmURL:await toBlobURL(b+'/ffmpeg-core.wasm','application/wasm')});loaded=true}
+$('go').onclick=async()=>{try{$('go').disabled=true;$('prog').hidden=false;status('Préparation…');await load();await ff.writeFile('input.mp4',await fetchFile(file));await ff.exec(['-i','input.mp4','-vf','reverse','-af','areverse','-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac','-movflags','+faststart','output.mp4']);const d=await ff.readFile('output.mp4');const u=URL.createObjectURL(new Blob([d.buffer],{type:'video/mp4'}));$('save').href=u;$('save').hidden=false;$('prog').value=100;status('Vidéo inversée avec succès.','ok')}catch(e){console.error(e);status('Erreur : '+e.message,'err')}finally{$('go').disabled=false}};
+</script></body></html>
