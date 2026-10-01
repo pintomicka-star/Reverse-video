@@ -1,0 +1,16 @@
+{
+  "name": "reverse-video-android",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo Capacitor app build is handled by GitHub Actions"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.0",
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/cli": "^7.4.0",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/util": "^0.12.2"
+  }
+}
