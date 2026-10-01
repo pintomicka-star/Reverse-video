@@ -1,0 +1,6 @@
+{
+  "appId": "fr.reversevideo.local",
+  "appName": "Reverse Video",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
